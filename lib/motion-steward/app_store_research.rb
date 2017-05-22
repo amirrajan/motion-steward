@@ -37,7 +37,7 @@ class MotionSteward::AppStoreResearch
       if user_rating_count < 99
         puts '  - App has very few ratings, which usually means very few downloads.'
       elsif user_rating_count < 300
-        puts '  - App has a moderate number of reviews. If the app has been recently updated, then this is probably a new app.'
+        puts "  - App has a moderate number of reviews (#{user_rating_count.commas}). If the app has been recently updated, then this is probably a new app."
       elsif user_rating_count > 10_000
         puts "  - App has an astronomical number of reviews (#{user_rating_count.commas}). If your app is similar to this one, you probably shouldn't build yours because you have little to no chance of \"beating them\"."
       elsif user_rating_count > 5_000

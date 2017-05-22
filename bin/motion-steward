@@ -48,7 +48,7 @@ def prompt_for_response message
 end
 
 def research
-  term = prompt_for_response "Enter a search term or app name, and I'll return people will see when they search for that term (along with some fancy data):"
+  term = prompt_for_response "Enter a search term or app name, and I'll return what people will see when they search for that term in the App Store (along with some fancy data):"
   puts ''
   MotionSteward::AppStoreResearch.analyze(term)
 end
