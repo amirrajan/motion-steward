@@ -4,7 +4,7 @@ require 'fastlane'
 require 'motion-steward'
 
 def options
-  [:research, :audit]
+  [:research, :audit, :create_dev_profile]
 end
 
 def list_apps
@@ -34,7 +34,21 @@ def research
   MotionSteward::AppStoreResearch.analyze(term)
 end
 
-def audit
+def create_dev_profile
+  login_if_needed
+  puts "Here are the apps I've found without development profiles:\n\n"
+
+  MotionSteward.apps_without_development_profiles.each do |p|
+    puts "- #{p.name}: #{p.bundle_id}"
+  end
+
+  selected_app = prompt_for_response "\nWhich app do you want to create a profile for?"
+
+  MotionSteward.create_development_profile selected_app
+  audit
+end
+
+def login_if_needed
   stored_login = `cat ~/.motion-steward-login`.chomp
   if stored_login.length.zero?
     email = prompt_for_response 'First, we need to log into your Apple Developer account. I need your email:'
@@ -42,7 +56,13 @@ def audit
   else
     email = stored_login
   end
+
   Spaceship.login email
+end
+
+def audit
+  login_if_needed
+  MotionSteward.audit_device
   MotionSteward.audit_provisioning_profiles
 end
 
