@@ -4,7 +4,7 @@ require 'fastlane'
 require 'motion-steward'
 
 def options
-  [:research]
+  [:research, :audit]
 end
 
 def list_apps
@@ -16,25 +16,6 @@ end
 def go_to_apps
   puts 'opening https://developer.apple.com/account/ios/identifier/bundle/'
   system 'open https://developer.apple.com/account/ios/identifier/bundle/'
-end
-
-def get_udid_of_connected_devices
-  script = <<~SCRIPT
-    i=0
-    for line in $(system_profiler SPUSBDataType | sed -n -e '/iPad/,/Serial/p' -e '/iPhone/,/Serial/p' | grep "Serial Number:" | awk -F ": " '{print $2}'); do
-        UDID=${line}
-        echo $UDID
-        udid_array[i]=${line}
-        i=$(($i+1))
-    done
-
-    cnt=${#udid_array[@]}
-    for ((i=0;i<cnt;i++)); do
-        echo ${udid_array[i]}
-    done
- SCRIPT
-
- system script
 end
 
 def gets
@@ -51,6 +32,18 @@ def research
   term = prompt_for_response "Enter a search term or app name, and I'll return what people will see when they search for that term in the App Store (along with some fancy data):"
   puts ''
   MotionSteward::AppStoreResearch.analyze(term)
+end
+
+def audit
+  stored_login = `cat ~/.motion-steward-login`.chomp
+  if stored_login.length.zero?
+    email = prompt_for_response 'First, we need to log into your Apple Developer account. I need your email:'
+    system "echo #{email} >> ~/.motion-steward-login"
+  else
+    email = stored_login
+  end
+  Spaceship.login email
+  MotionSteward.audit_provisioning_profiles
 end
 
 def help_with_certificates
