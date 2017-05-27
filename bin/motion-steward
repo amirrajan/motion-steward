@@ -4,7 +4,7 @@ require 'fastlane'
 require 'motion-steward'
 
 def options
-  [:research, :audit, :create_dev_profile, :add_device_to_profile]
+  [:research, :audit, :create_dev_profile, :add_device_to_profile, :download_dev_profile]
 end
 
 def list_apps
@@ -45,6 +45,7 @@ def create_dev_profile
   selected_app = prompt_for_response "\nWhich app do you want to create a profile for?"
 
   MotionSteward.create_development_profile selected_app
+  puts "\n"
   audit
 end
 
@@ -52,13 +53,14 @@ def add_device_to_profile
   login_if_needed
   puts "Here are the profiles I've found that do not have the currently connected device:\n\n"
 
-  MotionSteward.development_profiles_without_device(MotionSteward.udid_of_connected_device) do |p|
+  MotionSteward.development_profiles_without_device(MotionSteward.udid_of_connected_device).each do |p|
     puts " - #{p.app.name}'s development profile"
   end
 
   selected_app = prompt_for_response "\nWhich app's profile do you want to add the device to?"
 
   MotionSteward.add_device_to_app selected_app, MotionSteward.udid_of_connected_device
+  puts "\n"
   audit
 end
 
