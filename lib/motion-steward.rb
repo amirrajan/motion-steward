@@ -97,6 +97,12 @@ class MotionSteward
     invalidate_cache
   end
 
+  def self.download_development_profile app_name_or_bundle_id, to
+    profile = development_profiles.find { |p| p.app.name == app_name_or_bundle_id }
+    File.write(to, profile.download)
+    invalidate_cache
+  end
+
   def self.add_device_to_app app_name_or_bundle_id, udid
     profile = development_profiles_without_device(udid).find { |p| p.app.name == app_name_or_bundle_id }
     profile.devices << devices.find { |d| d.udid == udid }

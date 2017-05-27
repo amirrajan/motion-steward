@@ -28,6 +28,22 @@ def prompt_for_response message
   gets
 end
 
+def download_dev_profile
+  login_if_needed
+  puts "Here are the apps I've found without development profiles:\n\n"
+
+  MotionSteward.development_profiles.each do |p|
+    puts "- #{p.app.name}: #{p.app.bundle_id}"
+  end
+
+  selected_app = prompt_for_response "\nWhich app do you want to download the profile for?"
+  to_path = 'development.mobileprovision'
+
+  MotionSteward.download_development_profile selected_app, to_path
+  puts "Development profile for #{selected_app} has been downloaded to #{to_path}.\n"
+  audit
+end
+
 def research
   term = prompt_for_response "Enter a search term or app name, and I'll return what people will see when they search for that term in the App Store (along with some fancy data):"
   puts ''
