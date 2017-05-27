@@ -2,7 +2,7 @@
 require 'fastlane'
 
 class MotionSteward
-  def self.udid_of_connected_devices
+  def self.udid_of_connected_device
     script = <<~SCRIPT
     i=0
     for line in $(system_profiler SPUSBDataType | sed -n -e '/iPad/,/Serial/p' -e '/iPhone/,/Serial/p' | grep "Serial Number:" | awk -F ": " '{print $2}'); do
@@ -57,6 +57,10 @@ class MotionSteward
     end.map { |a| a[:app] }
   end
 
+  def self.development_profiles_without_device udid
+    development_profiles.find_all { |p| p.devices.none? { |d| d.udid == udid } }
+  end
+
   def self.development_profiles
     @development_profiles ||= profiles.find_all { |p| p.is_a? Spaceship::Portal::ProvisioningProfile::Development }
   end
@@ -93,16 +97,14 @@ class MotionSteward
     invalidate_cache
   end
 
-  def self.add_device_to_profile name, udid, profile
-    device = Spaceship::Device.create!(name: 'Name', udid: udid)
-
-    profile = 'todo'
-
-    #profile.update!
+  def self.add_device_to_app app_name_or_bundle_id, udid
+    profile = development_profiles_without_device(udid).find { |p| p.app.name == app_name_or_bundle_id }
+    profile.update!
+    invalidate_cache
   end
 
   def self.audit_device
-    currently_connected_device = udid_of_connected_devices
+    currently_connected_device = udid_of_connected_device
 
     if devices.none? { |d| d.udid == currently_connected_device }
       puts 'The currently connected device is not part of your developer account.'
@@ -118,7 +120,7 @@ class MotionSteward
       }
     end
 
-    currently_connected_device = udid_of_connected_devices
+    currently_connected_device = udid_of_connected_device
 
     lookup.each do |a|
       puts "#{a[:app].name}:"
