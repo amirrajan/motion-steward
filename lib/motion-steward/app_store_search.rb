@@ -18,6 +18,7 @@ class MotionSteward::AppStoreSearch
   def self.search_for_app term
     results = get 'search',
                   media: 'software',
+                  entity: 'software',
                   term: URI.encode(term),
                   country: 'us',
                   limit: 15
