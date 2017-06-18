@@ -4,7 +4,48 @@ require 'fastlane'
 require 'motion-steward'
 
 def options
-  [:research, :audit, :create_dev_profile, :add_device_to_profile, :download_dev_profile]
+  [
+    {
+      number: 1,
+      name: "Research",
+      method: :research,
+      description: "Got an App idea? Use this option to if there are any similar apps and how much money they've made."
+    },
+    {
+      number: 2,
+      name: "Audit",
+      method: :audit,
+      description: "Goes through the current apps in your iTunes developer account and figures out all the things that will keep you from distributing your app to the App Store."
+    },
+    {
+      number: 3,
+      name: "Create Dev Profile",
+      method: :create_dev_profile,
+      description: "Creates a development profile for an App."
+    },
+    {
+      number: 4,
+      name: "Add Device",
+      method: :add_device_to_profile,
+      description: "Adds the currently connected iDevice to a development profile (so you can deploy to the device instead of having to use the simulator)."
+    },
+    {
+      number: 5,
+      name: "Download Dev Profile",
+      method: :download_dev_profile,
+      description: "Downloads the most recent version of a development profile."
+    },
+    {
+      number: 6,
+      name: "Exit",
+      method: :exit_steward,
+      description: "Exits Steward."
+    }
+  ]
+end
+
+def exit_steward
+  exit(0)
 end
 
 def list_apps
@@ -156,24 +197,24 @@ end
 
 continue = true
 
+def find_option number_or_name
+  options.find { |o| o[:number] == number_or_name.to_i || Regexp.new(number_or_name) =~ o[:name].downcase }
+end
+
 while continue
   puts ''
   puts 'Options:'
   puts ''
-  options.map { |o| puts "- #{o}" }
-  puts '- exit'
-  puts ''
+  options.map { |o| puts "#{o[:number]}. #{o[:name]}: #{o[:description]}\n\n" }
 
   print 'What would you like to do (choose from the list above): '
 
   input = gets
 
-  if input == 'exit'
-    exit(0)
-  end
+  o = (find_option input)
 
-  if options.include? input.to_sym
+  if o
     system 'clear'
-    send(input.to_sym)
+    send(o[:method])
   end
 end
