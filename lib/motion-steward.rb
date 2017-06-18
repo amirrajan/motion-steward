@@ -4,19 +4,19 @@ require 'fastlane'
 class MotionSteward
   def self.udid_of_connected_device
     script = <<~SCRIPT
-    i=0
-    for line in $(system_profiler SPUSBDataType | sed -n -e '/iPad/,/Serial/p' -e '/iPhone/,/Serial/p' | grep "Serial Number:" | awk -F ": " '{print $2}'); do
-        UDID=${line}
-        echo $UDID
-        udid_array[i]=${line}
-        i=$(($i+1))
-    done
+       i=0
+       for line in $(system_profiler SPUSBDataType | sed -n -e '/iPad/,/Serial/p' -e '/iPhone/,/Serial/p' | grep "Serial Number:" | awk -F ": " '{print $2}'); do
+           UDID=${line}
+           echo $UDID
+           udid_array[i]=${line}
+           i=$(($i+1))
+       done
 
-    cnt=${#udid_array[@]}
-    for ((i=0;i<cnt;i++)); do
-        echo ${udid_array[i]}
-    done
- SCRIPT
+       cnt=${#udid_array[@]}
+       for ((i=0;i<cnt;i++)); do
+           echo ${udid_array[i]}
+       done
+    SCRIPT
 
     result = `#{script}`.chomp
     return nil if result.chomp.length.zero?
@@ -135,6 +135,9 @@ class MotionSteward
         if a[:development_profile].first.devices.none? { |d| d.udid == currently_connected_device }
           if currently_connected_device
             puts '  ✗ Development profile is missing the device that is currently connected.'
+          else
+            puts "  ✗ Development profile exists, but there is no iDevice connected"
+            puts "    to the Mac (I can't tell if the profile needs to be updated)."
           end
         else
           puts '  ✔ All is good with the development profile.'
