@@ -91,18 +91,28 @@ def research
   MotionSteward::AppStoreResearch.analyze(term)
 end
 
+def numbered_apps_without_development_profiles
+  MotionSteward.apps_without_development_profiles.each_with_index.map do |p, i|
+    { number: i + 1, app: p }
+  end
+end
+
 def create_dev_profile
   login_if_needed
   puts "Here are the apps I've found without development profiles:\n\n"
 
-  MotionSteward.apps_without_development_profiles.each do |p|
-    puts "- #{p.name}: #{p.bundle_id}"
+  numbered_apps_without_development_profiles.each do |hash|
+    puts "#{hash[:number]}. #{hash[:app].name} (#{hash[:app].bundle_id})"
   end
 
-  selected_app = prompt_for_response "\nWhich app do you want to create a profile for?"
+  number_or_name = prompt_for_response "\nWhich app do you want to create a profile for?"
 
-  MotionSteward.create_development_profile selected_app
+  app_name = numbered_apps_without_development_profiles.find { |hash| hash[:number] == number_or_name.to_i || Regexp.new(number_or_name) =~ hash[:app].name.downcase }[:app].name
+
+  MotionSteward.create_development_profile app_name
+
   puts "\n"
+
   audit
 end
 
