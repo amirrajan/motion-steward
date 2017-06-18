@@ -1,6 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'motion-steward'
-  s.version     = '1.0.4'
+  s.version     = '1.0.5'
+  s.required_ruby_version = '>= 2.3.1'
   s.add_runtime_dependency 'fastlane', ['>= 2.32.1', '< 3.0']
   s.date        = '2017-05-21'
   s.summary     = 'CLI app that helps steward one through RubyMotion.'
