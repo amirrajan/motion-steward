@@ -25,18 +25,30 @@ def options
     },
     {
       number: 4,
+      name: "Create Distribution Profile",
+      method: :create_distribution_profile,
+      description: "Creates a development profile for an App."
+    },
+    {
+      number: 5,
       name: "Add Device",
       method: :add_device_to_profile,
       description: "Adds the currently connected iDevice to a development profile (so you can deploy to the device instead of having to use the simulator)."
     },
     {
-      number: 5,
+      number: 6,
       name: "Download Dev Profile",
       method: :download_dev_profile,
       description: "Downloads the most recent version of a development profile."
     },
     {
-      number: 6,
+      number: 7,
+      name: "Download Distribution Profile",
+      method: :download_distribution_profile,
+      description: "Downloads the most recent version of a production profile."
+    },
+    {
+      number: 8,
       name: "Exit",
       method: :exit_steward,
       description: "Exits Steward."
@@ -69,9 +81,25 @@ def prompt_for_response message
   gets
 end
 
+def download_distribution_profile
+  login_if_needed
+  puts "Here are the apps I've found with valid distribution profiles:\n\n"
+
+  MotionSteward.distribution_profiles.each do |p|
+    puts "- #{p.app.name}: #{p.app.bundle_id}"
+  end
+
+  selected_app = prompt_for_response "\nWhich app do you want to download the profile for?"
+  to_path = 'distribution.mobileprovision'
+
+  MotionSteward.download_distribution_profile selected_app, to_path
+  puts "Distribution profile for #{selected_app} has been downloaded to #{to_path}.\n"
+  audit
+end
+
 def download_dev_profile
   login_if_needed
-  puts "Here are the apps I've found without development profiles:\n\n"
+  puts "Here are the apps I've found with valid development profiles:\n\n"
 
   MotionSteward.development_profiles.each do |p|
     puts "- #{p.app.name}: #{p.app.bundle_id}"
@@ -97,6 +125,12 @@ def numbered_apps_without_development_profiles
   end
 end
 
+def numbered_apps_without_distribution_profiles
+  MotionSteward.apps_without_distribution_profiles.each_with_index.map do |p, i|
+    { number: i + 1, app: p }
+  end
+end
+
 def create_dev_profile
   login_if_needed
   puts "Here are the apps I've found without development profiles:\n\n"
@@ -110,6 +144,25 @@ def create_dev_profile
   app_name = numbered_apps_without_development_profiles.find { |hash| hash[:number] == number_or_name.to_i || Regexp.new(number_or_name) =~ hash[:app].name.downcase }[:app].name
 
   MotionSteward.create_development_profile app_name
+
+  puts "\n"
+
+  audit
+end
+
+def create_distribution_profile
+  login_if_needed
+  puts "Here are the apps I've found without distribution profiles:\n\n"
+
+  numbered_apps_without_distribution_profiles.each do |hash|
+    puts "#{hash[:number]}. #{hash[:app].name} (#{hash[:app].bundle_id})"
+  end
+
+  number_or_name = prompt_for_response "\nWhich app do you want to create a profile for?"
+
+  app_name = numbered_apps_without_distribution_profiles.find { |hash| hash[:number] == number_or_name.to_i || Regexp.new(number_or_name) =~ hash[:app].name.downcase }[:app].name
+
+  MotionSteward.create_distribution_profile app_name
 
   puts "\n"
 
@@ -155,7 +208,7 @@ def help_with_certificates
   development = Spaceship.certificate.all.find_all { |c| c.is_a? Spaceship::Portal::Certificate::Development }.first
 
   if production.nil? or development.nil?
-    puts "You need to create a Production and Development certificate. This script doesn't support that stuff yet."
+    puts "You need to create a Distribution and Development certificate. This script doesn't support that stuff yet."
     system "open https://developer.apple.com/account/ios/certificate/"
     exit(0)
   end

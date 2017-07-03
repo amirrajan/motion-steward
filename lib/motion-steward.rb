@@ -23,6 +23,14 @@ class MotionSteward
     result.split("\n").first.chomp
   end
 
+  def self.xcode_versions
+             # /Contents/Developer/usr/bin/xcodebuild -version
+  end
+
+  def self.current_xcode_version
+    system "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -version"
+  end
+
   def self.invalidate_cache
     @apps = nil
     @profiles = nil
@@ -54,6 +62,18 @@ class MotionSteward
       }
     end.find_all do |a|
       a[:development_profile].count.zero?
+    end.map { |a| a[:app] }
+  end
+
+  def self.apps_without_distribution_profiles
+    apps.map do |a|
+      {
+        app: a,
+        development_profile: development_profiles.find_all { |d| d.app.app_id == a.app_id },
+        distribution_profile: distribution_profiles.find_all { |d| d.app.app_id == a.app_id }
+      }
+    end.find_all do |a|
+      a[:distribution_profile].count.zero?
     end.map { |a| a[:app] }
   end
 
@@ -97,8 +117,34 @@ class MotionSteward
     invalidate_cache
   end
 
+  def self.create_distribution_profile app_name_or_bundle_id
+    app = apps.find { |a| a.name == app_name_or_bundle_id || a.bundle_id == app_name_or_bundle_id }
+
+    unless app
+      puts "App/Bundle Id #{app_name_or_bundle_id} not found."
+      return
+    end
+
+    Spaceship::Portal::ProvisioningProfile::AppStore.create!(
+      name: "Distribution: #{app.name}",
+      bundle_id: app.bundle_id,
+      certificate: production_certificates.first,
+      devices: [],
+      mac: false,
+      sub_platform: nil
+    )
+
+    invalidate_cache
+  end
+
   def self.download_development_profile app_name_or_bundle_id, to
     profile = development_profiles.find { |p| p.app.name == app_name_or_bundle_id }
+    File.write(to, profile.download)
+    invalidate_cache
+  end
+
+  def self.download_distribution_profile app_name_or_bundle_id, to
+    profile = distribution_profiles.find { |p| p.app.name == app_name_or_bundle_id }
     File.write(to, profile.download)
     invalidate_cache
   end
