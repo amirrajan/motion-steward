@@ -48,12 +48,22 @@ def options
       description: "Downloads the most recent version of a production profile."
     },
     {
+      number: 9,
+      name: "Download RubyMotion",
+      method: :download_rubymotion,
+      description: "Downloads RubyMotion so you can install it and build mobile apps using Ruby."
+    },
+    {
       number: 8,
       name: "Exit",
       method: :exit_steward,
       description: "Exits Steward."
     }
   ]
+end
+
+def download_rubymotion
+  system "wget http://www.rubymotion.com/files/RubyMotion%20Installer.zip"
 end
 
 def exit_steward
